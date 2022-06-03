@@ -1,5 +1,59 @@
 const estabelecimentosModel = require('../models/estabelecimentos.json')
 
+const findAllBusiness = (req, res) => {
+  res.status(200).json({
+    message: 'Retornando todos os estabelecimentos',
+    estabelecimentos: estabelecimentosModel
+  })
+}
+
+const searchBusiness = (req, res) => {
+  const { nome = null, cidade = null } = req.query
+
+  try {
+    let filterEstabelecimentos = estabelecimentosModel.slice()
+
+    if (filterEstabelecimentos.length == 0) {
+      return res.status(200).json({
+        message: 'Ainda não temos estabelecimentos cadastrados.'
+      })
+    }
+
+    if (nome) {
+      filterEstabelecimentos = filterEstabelecimentos.filter(
+        currentEstabelecimento =>
+          currentEstabelecimento.nome
+            .toLocaleLowerCase()
+            .includes(nome.toLocaleLowerCase())
+      )
+    }
+
+    if (cidade) {
+      filterEstabelecimentos = filterEstabelecimentos.filter(
+        currentEstabelecimento =>
+          currentEstabelecimento.cidade
+            .toLocaleLowerCase()
+            .includes(cidade.toLocaleLowerCase())
+      )
+    }
+
+    if (filterEstabelecimentos.length === 0) {
+      throw new Error('não foi encontrado resultado para essa busca')
+    }
+
+    res.status(200).json(filterEstabelecimentos)
+  } catch (error) {
+    console.error(error)
+    console.log('query recebida: ', req.query)
+
+    res.status(404).json({
+      message: error.message,
+      details: 'query invalida: ',
+      query: req.query
+    })
+  }
+}
+
 const createBusiness = (req, res) => {
   let bodyReq = req.body
 
@@ -111,6 +165,8 @@ const deslike = (req, res) => {
 }
 
 module.exports = {
+  findAllBusiness,
+  searchBusiness,
   createBusiness,
   updateAddress,
   addLikes,
